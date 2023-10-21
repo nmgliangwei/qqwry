@@ -104,3 +104,57 @@ jobs:
         run: |
           echo "FILE_HASH=$(sha256sum app/qqwry.dat | awk '{ print $1 }')" >> $GITHUB_ENV
       
+      - name: Create Release
+        id: create_release
+        uses: nmgliangwei/release@v1
+        if: env.TAG_EXISTS != 'true'
+        with:
+          commit: ${{ env.GITHUB_SHA }}
+          tag: ${{ env.dat_date }}
+          token: ${{ secrets.QQWRY }}
+          artifacts: app/qqwry.dat
+          body: |
+           #### qqwry.dat
+
+           | Name               | Value                      |
+           | :----------------: | :------------------------: |
+           | Zip Download link: | ${{ env.LINK }}            |
+           | File hash:         | qqwry.dat: ${{ env.FILE_HASH }} |
+
+           <p align="right"><code>Version: ${{ env.dat_date }} </code></p>
+
+      - name: Calculate repository hash value
+        id: calculate_repo_hash_value
+        run: |
+          echo "REPO_HASH=$(git show main:qqwry.dat | sha256sum | awk '{ print $1 }')" >> $GITHUB_ENV
+
+      - name: Check for changes in qqwry.dat
+        id: check
+        run: |
+          if [ ! -f qqwry.dat ]; then
+            echo "File does not exist"
+            echo "RUN_NEXT_STEP=true" >> $GITHUB_ENV
+          else
+            #比较上面的两个hash值是否相等
+            if [ "${{ env.FILE_HASH }}" != "${{ env.REPO_HASH }}" ]; then
+              echo "File has changed"
+              echo "RUN_NEXT_STEP=true" >> $GITHUB_ENV
+            else
+              echo "File has not changed"
+            fi
+          fi
+
+      - name: Commit qqwry.dat
+        if: env.RUN_NEXT_STEP == 'true'
+        env:
+          GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
+          GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
+        run: |
+          git config --global user.name $GIT_USERNAME
+          git config --global user.email $GIT_EMAIL
+          if ! git status -s | grep qqwry.dat --quiet; then
+            mv app/qqwry.dat qqwry.dat
+            git add qqwry.dat
+            git commit -m "Update qqwry.dat in  ${{ env.dat_date }}"
+            git push
+          fi
