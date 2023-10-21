@@ -106,7 +106,7 @@ jobs:
       
       - name: Create Release
         id: create_release
-        uses: nmgliangwei/release@v1
+        uses: nmgliangwei/main@v1
         if: env.TAG_EXISTS != 'true'
         with:
           commit: ${{ env.GITHUB_SHA }}
