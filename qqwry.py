@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     try:
         link = get_link(url)
-        if link:
+        if link and link != "None" and link is not None:
             zip_url = get_zip_url(link)
             if zip_url:
                 print(zip_url[0])
