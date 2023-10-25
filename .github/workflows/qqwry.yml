@@ -2,7 +2,7 @@ name: qqwry
 on:
   workflow_dispatch:
   schedule:
-    - cron: '10 2,9,15 * * *'
+    - cron: '10 2,5,9,12,15 * * *'
   push:
     branches:
       - main
