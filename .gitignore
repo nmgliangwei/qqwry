@@ -1,0 +1,10 @@
+*/.DS_Store
+.DS_Store
+.idea/*
+*.iml
+.idea
+.*.swp
+Thumbs.db
+test.*
+*.pyc
+__pycache__
