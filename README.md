@@ -1,6 +1,8 @@
 # qqwry.dat [![qqwry](https://github.com/nmgliangwei/qqwry/actions/workflows/qqwry.yml/badge.svg)](https://github.com/nmgliangwei/qqwry/actions/workflows/qqwry.yml)
 **纯真IP数据库文件，dat数据非exe安装包，使用 Github Action 定时获得最新版本的IP库文件，每天会扫描三次（10:10 17:10 23:10），当发现更新时也可以选择手动运行来获得文件。**
 
+**特别感谢 [FW27623](https://github.com/FW27623)/[qqwry](https://github.com/FW27623/qqwry) 由于fork出现一些问题导致异常所以单独建了项目**
+
 **本仓库如果有帮助到您的话可以点点 [Star⭐](https://github.com/nmgliangwei/qqwry)支持下。**
 
 # 目录说明
@@ -11,6 +13,7 @@
 # 感谢
 -  借鉴 [HMBSbige](https://github.com/HMBSbige)/[qqwry](https://github.com/HMBSbige/qqwry) 的 `workflow` 写法
 -  使用 [dscharrer](https://github.com/dscharrer)/[innoextract](https://github.com/dscharrer/innoextract) 对获取到的 exe 文件进行解包操作
+-  特别感谢 [FW27623](https://github.com/FW27623)/[qqwry](https://github.com/FW27623/qqwry) 由于fork出现一些问题导致异常所以单独建了项目
 
 # 更新点
 
@@ -18,6 +21,7 @@
 - 使用 ` Python ` 来获取微信公众号推文发布的IP库更新链接
 - 在` Github Action ` 中增加对已有同名 [` Release` ](https://github.com/nmgliangwei/qqwry/releases) 以及[` Tags `](https://github.com/nmgliangwei/qqwry/tags)的处理
 - 在` Github Action ` 中解包 `qqwy.dat` 文件，默认上传至根目录和 Release 页面中，此外将增加哈希值校验防止重复提交
+- 处理获取公众号的 dat 链接时异常问题
 
 # 如何使用
 
