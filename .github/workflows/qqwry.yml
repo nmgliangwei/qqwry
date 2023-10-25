@@ -48,6 +48,7 @@ jobs:
             echo "No link found, exiting"
             exit 0
           fi
+            echo ${link}
             echo "LINK=${link}" >> $GITHUB_ENV
       
       - name: Use link to download newest Zip with retry
