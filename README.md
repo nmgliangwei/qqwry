@@ -6,7 +6,7 @@
 **本仓库如果有帮助到您的话可以点点 [Star⭐](https://github.com/nmgliangwei/qqwry)支持下。**
 
 # 目录说明
- 1、[`qqwry.dat` ](https://raw.gitmirror.com/nmgliangwei/qqwry/main/qqwry.dat) 为最新数据直链（即下即用），每次更新会覆盖之前的内容，如果想要某个时间段的历史数据可在 [` Release ` ](https://github.com/nmgliangwei/qqwry/releases) 里进行查看。
+ 1、[`qqwry.dat` ](https://raw.gitmirror.com/nmgliangwei/qqwry/main/qqwry.dat) 为最新数据直链（https://raw.gitmirror.com/nmgliangwei/qqwry/main/qqwry.dat 国内加速链，接即下即用），每次更新会覆盖之前的内容，如果想要某个时间段的历史数据可在 [` Release ` ](https://github.com/nmgliangwei/qqwry/releases) 里进行查看。
 
  2、`qqwry.py` 文件用于获取“纯真IP实验室”最新微信公众号推文内发布的免费IP库的下载链接  
 
