@@ -7,7 +7,7 @@ def get_link(url):
     headers = {
         'Accept-Language': 'zh-CN,zh;q=0.9,en-CN;q=0.8,en;q=0.7,zh-TW;q=0.6',
         'Cookie': 'rewardsn=; wxtokenkey=777',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
     }
 
     # 访问链接并从json中提取微信推文链接
@@ -24,7 +24,6 @@ def get_zip_url(link):
     # 提取文本中的zip链接，正则匹配以https://开头以.zip后缀的链接
     content = soup.find('div', {'id': 'js_content'}).get_text()
     zip_url = re.findall(r'https://.*?\.zip', content)
-
     return zip_url
 
 if __name__ == '__main__':
@@ -33,9 +32,10 @@ if __name__ == '__main__':
 
     try:
         link = get_link(url)
+        print(link)
         if link and link != "None" and link is not None:
             zip_url = get_zip_url(link)
-            if zip_url:
+            if zip_url and zip_url != "None" and zip_url is not None:
                 print(zip_url[0])
             else:
                 print("没有找到zip链接")
