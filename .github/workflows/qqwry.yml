@@ -120,7 +120,7 @@ jobs:
            | Name               | Value                      |
            | :----------------: | :------------------------: |
            | Zip Download link: | ${{ env.LINK }}            |
-           | Dat File Fast Download:| qqwry.dat: https://raw.gitmirror.com/nmgliangwei/qqwry/main/qqwry.dat |
+           | Dat File Fast Download:| https://raw.gitmirror.com/nmgliangwei/qqwry/main/qqwry.dat |
            | File hash:         | qqwry.dat: ${{ env.FILE_HASH }} |
 
            <p align="right"><code>Version: ${{ env.dat_date }} </code></p>
