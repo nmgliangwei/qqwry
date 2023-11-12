@@ -156,7 +156,7 @@ jobs:
           git config --global user.email $GIT_EMAIL
           if ! git status -s | grep qqwry.dat --quiet; then
             mv app/qqwry.dat qqwry.dat
-            echo ${{ env.dat_date }} >version
+            echo ${{ env.dat_date }} > version
             git add qqwry.dat version
             git commit -m "Update qqwry.dat in  ${{ env.dat_date }}"
             git push
