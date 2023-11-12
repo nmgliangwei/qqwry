@@ -90,6 +90,7 @@ jobs:
           echo "dat_date=$name" | Out-File -FilePath $env:GITHUB_ENV
           7z e -y $zip setup.exe
           ./innoextract setup.exe -I qqwry.dat
+          echo "$dat_date" >/app/version
 
       - name: Check if tag exists
         run: |
@@ -156,7 +157,8 @@ jobs:
           git config --global user.email $GIT_EMAIL
           if ! git status -s | grep qqwry.dat --quiet; then
             mv app/qqwry.dat qqwry.dat
-            git add qqwry.dat
+            mv /app/version version
+            git add qqwry.dat version
             git commit -m "Update qqwry.dat in  ${{ env.dat_date }}"
             git push
           fi
