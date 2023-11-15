@@ -3,6 +3,8 @@
 
 **特别感谢 [FW27623](https://github.com/FW27623)/[qqwry](https://github.com/FW27623/qqwry) 由于fork出现一些问题导致异常所以单独建了项目。**
 
+**基于本仓库的dat库文件，制作了兼容ipip.net的IPDB格式的库文件，请关注[nmgliangwei](https://github.com/nmgliangwei)/[qqwry.ipdb](https://github.com/nmgliangwei/qqwry.ipdb)
+
 **本仓库如果有帮助到您的话可以点点 [Star⭐](https://github.com/nmgliangwei/qqwry)支持下。**
 
 # 目录说明
