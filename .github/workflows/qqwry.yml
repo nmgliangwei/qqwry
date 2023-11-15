@@ -121,7 +121,7 @@ jobs:
            | :----------------: | :------------------------: |
            | Zip Download link: | ${{ env.LINK }}            |
            | Dat File Fast Download: | https://raw.gitmirror.com/nmgliangwei/qqwry/main/qqwry.dat |
-           | Dat File hash:         | qqwry.dat: ${{ env.FILE_HASH }} |
+           | Dat File sha256:         | qqwry.dat: ${{ env.FILE_HASH }} |
 
            <p align="right"><code>Version: ${{ env.dat_date }} </code></p>
 
