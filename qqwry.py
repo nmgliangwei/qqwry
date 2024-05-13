@@ -13,8 +13,11 @@ def get_link(url):
     # 访问链接并从json中提取微信推文链接
     response = requests.get(url, headers=headers)
     data = json.loads(response.text)
-    link = data['getalbum_resp']['article_list'][0]['url']
-    return link
+    for i in data['getalbum_resp']['article_list']:
+        if re.findall(r'纯真IP库社区版更新.*?', i["title"]):
+            link = i['url']
+            return link
+    return None
 
 def get_zip_url(link):
     # 访问微信推文链接并解析网页
