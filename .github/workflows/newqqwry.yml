@@ -26,7 +26,7 @@ jobs:
       - name: Download file 
         run: |
           echo "download dat file..."
-          wget -q --user-agent=${{ ENV.USER_AGENT }} -O qqwry.dat "${{ secrets.DAT_FILE_URL }}" 
+          wget -q --user-agent="${{ ENV.USER_AGENT }}" -O qqwry.dat "${{ secrets.DAT_FILE_URL }}" 
           if [ $? -eq 0 ]; then
             echo "File downloaded successfully."
           else
@@ -35,7 +35,7 @@ jobs:
           fi
           TAG_DATE=$(date "+%Y-%m-%d")
           echo "download czdb file..."
-          wget --content-disposition -q --user-agent=${{ ENV.USER_AGENT }} "${{ secrets.CZDB_FILE_URL }}"
+          wget --content-disposition -q --user-agent="${{ ENV.USER_AGENT }}" "${{ secrets.CZDB_FILE_URL }}"
           if [ $? -eq 0 ]; then
             echo "File downloaded successfully."
           else
