@@ -1,13 +1,7 @@
 name: build
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '10 2,5,9,12,15 * * *'
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - 'README.md'
+  
 env:
   innoextract_version: 1.9
   arch: amd64
