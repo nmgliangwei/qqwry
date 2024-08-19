@@ -1,4 +1,4 @@
-# qqwry.dat [![build](https://github.com/nmgliangwei/qqwry/actions/workflows/qqwry.yml/badge.svg)](https://github.com/nmgliangwei/qqwry/actions/workflows/qqwry.yml)
+# czip db  [![build](https://github.com/nmgliangwei/qqwry/actions/workflows/newqqwry.yml/badge.svg)](https://github.com/nmgliangwei/qqwry/actions/workflows/newqqwry.yml)
 **纯真IP数据库文件，dat数据非exe安装包，使用 Github Action 定时获得最新版本的IP库文件，每天会扫描5次（10:10 12:10 17:10 20:10 23:10），当发现更新时也可以选择手动运行来获得文件。**
 
 **基于本仓库的dat库文件，我还制作了兼容ipip.net的IPDB格式的库文件，请关注[nmgliangwei](https://github.com/nmgliangwei)/[qqwry.ipdb](https://github.com/nmgliangwei/qqwry.ipdb)。**
