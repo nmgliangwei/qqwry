@@ -99,6 +99,8 @@ jobs:
             echo "FILE_CHANGED=true" >> $GITHUB_ENV
           else
             echo "File has not changed."
+            echo "CZDB_V4_FILE_HASH=${{ env.REPO_CZDB_V4_HASH }}" >> $GITHUB_ENV
+            echo "CZDB_V6_FILE_HASH=${{ env.REPO_CZDB_V6_HASH }}" >> $GITHUB_ENV
           fi
 
       - name: Check if tag exists
@@ -134,7 +136,7 @@ jobs:
            <p align="right"><code>Version: ${{ env.dat_date }} </code></p>
 
       - name: Commit and push changes
-        if: env.FILE_CHANGED == 'true' || env.TAG_EXISTS == 'false'
+        if: env.FILE_CHANGED == 'true'
         env:
           GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
           GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
