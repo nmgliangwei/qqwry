@@ -1,4 +1,4 @@
-name: Download and Update dat File
+name: Download and Update Czip Db File
 
 on:
   workflow_dispatch:
