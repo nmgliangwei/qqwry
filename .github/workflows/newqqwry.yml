@@ -93,7 +93,7 @@ jobs:
       - name: Compare file hashes
         id: compare_hashes
         run: |
-          if [ "${{ env.DAT_FILE_HASH }}" != "${{ env.REPO_DAT_HASH }}" -o "${{ env.CZDB_V4_FILE_HASH }}" != "${{ env.REPO_CZDB_V4_HASH }}" -o "${{ env.CZDB_V6_FILE_HASH }}" != "${{ env.REPO_CZDB_V6_HASH }}" ]; then
+          if [ "${{ env.DAT_FILE_HASH }}" != "${{ env.REPO_DAT_HASH }}" ]; then
             echo "File has changed."
             echo "FILE_CHANGED=true" >> $GITHUB_ENV
           else
@@ -126,9 +126,9 @@ jobs:
            | Dat File Fast Download:     | https://raw.gitmirror.com/nmgliangwei/qqwry/main/qqwry.dat |
            | Dat File sha256:         | qqwry.dat: ${{ env.DAT_FILE_HASH }} |
            | Czdb v4 File Fast Download:     | https://raw.gitmirror.com/nmgliangwei/qqwry/main/cz88_public_v4.czdb |
-           | Czdb v4 File sha256:         | cz88_public_v4.czdb: ${{ env.DAT_FILE_HASH }} |
+           | Czdb v4 File sha256:         | cz88_public_v4.czdb: ${{ env.CZDB_V4_FILE_HASH }} |
            | Czdb v6 File Fast Download:     | https://raw.gitmirror.com/nmgliangwei/qqwry/main/cz88_public_v6.czdb |
-           | Czdb v6 File sha256:         | cz88_public_v6.czdb: ${{ env.DAT_FILE_HASH }} |
+           | Czdb v6 File sha256:         | cz88_public_v6.czdb: ${{ env.CZDB_V6_FILE_HASH }} |
 
            <p align="right"><code>Version: ${{ env.dat_date }} </code></p>
 
