@@ -120,7 +120,7 @@ jobs:
           commit: ${{ env.GITHUB_SHA }}
           tag: ${{ env.dat_date }}
           token: ${{ secrets.qqwry }}
-          artifacts: qqwry.dat,cz88_public_v4.czdb,cz88_public_v6.czdb
+          # artifacts: qqwry.dat,cz88_public_v4.czdb,cz88_public_v6.czdb
           body: |
            #### czip db file info
 
