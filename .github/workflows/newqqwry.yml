@@ -44,8 +44,8 @@ jobs:
             echo "Czdb file download failed."
             exit 1
           fi
-          unzip czdb.zip
-          ls -alh
+          unzip ./tmpdownload/czdb.zip
+          ls -alh ./tmpdownload/
           echo "dat_date=$TAG_DATE" >> $GITHUB_ENV
       - name: Calculate new file hash
         id: calculate_new_hash
