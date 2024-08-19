@@ -16,7 +16,7 @@ env:
   USER_AGENT: "Mozilla/5.0 (Macintosh; Intel Mac OS X 12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.0.0"
 
 jobs:
-  update-file:
+  new-build:
     runs-on: ubuntu-latest
 
     steps:
