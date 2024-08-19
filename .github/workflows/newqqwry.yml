@@ -134,7 +134,7 @@ jobs:
            <p align="right"><code>Version: ${{ env.dat_date }} </code></p>
 
       - name: Commit and push changes
-        if: env.FILE_CHANGED == 'true'
+        if: env.FILE_CHANGED == 'true' or env.TAG_EXISTS == 'false'
         env:
           GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
           GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
