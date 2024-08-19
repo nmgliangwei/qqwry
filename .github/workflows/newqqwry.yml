@@ -28,18 +28,18 @@ jobs:
           echo "download dat file..."
           wget -q --user-agent="${{ ENV.USER_AGENT }}" -O qqwry.dat "${{ secrets.DAT_FILE_URL }}" 
           if [ $? -eq 0 ]; then
-            echo "File downloaded successfully."
+            echo "Dat file downloaded successfully."
           else
-            echo "File download failed."
+            echo "Dat file download failed."
             exit 1
           fi
           TAG_DATE=$(date "+%Y-%m-%d")
           echo "download czdb file..."
           wget --content-disposition -q --user-agent="${{ ENV.USER_AGENT }}" "${{ secrets.CZDB_FILE_URL }}"
           if [ $? -eq 0 ]; then
-            echo "File downloaded successfully."
+            echo "Czdb file downloaded successfully."
           else
-            echo "File download failed."
+            echo "Czdb file download failed."
             exit 1
           unzip czdb.zip
           ls -alh
