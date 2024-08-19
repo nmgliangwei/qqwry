@@ -41,6 +41,7 @@ jobs:
           else
             echo "Czdb file download failed."
             exit 1
+          fi
           unzip czdb.zip
           ls -alh
           echo "dat_date=$TAG_DATE" >> $GITHUB_ENV
