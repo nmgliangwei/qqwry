@@ -25,9 +25,10 @@ jobs:
 
       - name: Download file 
         run: |
-          rm -rf *.dat *.czdb czdb.zip
+          mkdir ./tmpdownload
+          rm -rf ./tmpdownload/*
           echo "download dat file..."
-          wget -q --user-agent="${{ ENV.USER_AGENT }}" -O qqwry.dat "${{ secrets.DAT_FILE_URL }}" 
+          wget -q --user-agent="${{ ENV.USER_AGENT }}" -P ./tmpdownload -O qqwry.dat "${{ secrets.DAT_FILE_URL }}" 
           if [ $? -eq 0 ]; then
             echo "Dat file downloaded successfully."
           else
@@ -36,7 +37,7 @@ jobs:
           fi
           TAG_DATE=$(date "+%Y-%m-%d")
           echo "download czdb file..."
-          wget --content-disposition -q --user-agent="${{ ENV.USER_AGENT }}" "${{ secrets.CZDB_FILE_URL }}"
+          wget --content-disposition -q --user-agent="${{ ENV.USER_AGENT }}" -P ./tmpdownload "${{ secrets.CZDB_FILE_URL }}"
           if [ $? -eq 0 ]; then
             echo "Czdb file downloaded successfully."
           else
@@ -49,27 +50,27 @@ jobs:
       - name: Calculate new file hash
         id: calculate_new_hash
         run: |
-          if [ -f qqwry.dat ]; then
+          if [ -f ./tmpdownload/qqwry.dat ]; then
             echo "Calculating hash for qqwry.dat..."
-            DAT_FILE_HASH=$(sha256sum qqwry.dat | awk '{ print $1 }')
+            DAT_FILE_HASH=$(sha256sum ./tmpdownload/qqwry.dat | awk '{ print $1 }')
             echo "DAT_FILE_HASH=${DAT_FILE_HASH}" >> $GITHUB_ENV
             echo "dat file hash: ${DAT_FILE_HASH}"
           else
             echo "Error: qqwry.dat not found."
             exit 1
           fi
-          if [ -f cz88_public_v4.czdb ]; then
+          if [ -f ./tmpdownload/cz88_public_v4.czdb ]; then
             echo "Calculating hash for cz88_public_v4.czdb..."
-            CZDB_V4_FILE_HASH=$(sha256sum cz88_public_v4.czdb | awk '{ print $1 }')
+            CZDB_V4_FILE_HASH=$(sha256sum ./tmpdownload/cz88_public_v4.czdb | awk '{ print $1 }')
             echo "CZDB_V4_FILE_HASH=${CZDB_V4_FILE_HASH}" >> $GITHUB_ENV
             echo "czdb v4 file hash: ${CZDB_V4_FILE_HASH}"
           else
             echo "Error: cz88_public_v4.czdb not found."
             exit 1
           fi
-          if [ -f cz88_public_v6.czdb ]; then
+          if [ -f ./tmpdownload/cz88_public_v6.czdb ]; then
             echo "Calculating hash for cz88_public_v6.czdb..."
-            CZDB_V6_FILE_HASH=$(sha256sum cz88_public_v6.czdb | awk '{ print $1 }')
+            CZDB_V6_FILE_HASH=$(sha256sum ./tmpdownload/cz88_public_v6.czdb | awk '{ print $1 }')
             echo "CZDB_V6_FILE_HASH=${CZDB_V6_FILE_HASH}" >> $GITHUB_ENV
             echo "czdb v6 file hash: ${CZDB_V6_FILE_HASH}"
           else
@@ -96,6 +97,9 @@ jobs:
         run: |
           if [ "${{ env.DAT_FILE_HASH }}" != "${{ env.REPO_DAT_HASH }}" ]; then
             echo "File has changed."
+            \cp ./tmpdownload/qqwry.dat ./
+            \cp ./tmpdownload/cz88_public_v4.czdb ./
+            \cp ./tmpdownload/cz88_public_v6.czdb ./
             echo "FILE_CHANGED=true" >> $GITHUB_ENV
           else
             echo "File has not changed."
@@ -120,7 +124,7 @@ jobs:
           commit: ${{ env.GITHUB_SHA }}
           tag: ${{ env.dat_date }}
           token: ${{ secrets.qqwry }}
-          # artifacts: qqwry.dat,cz88_public_v4.czdb,cz88_public_v6.czdb
+          artifacts: qqwry.dat,cz88_public_v4.czdb,cz88_public_v6.czdb
           body: |
            #### czip db file info
 
