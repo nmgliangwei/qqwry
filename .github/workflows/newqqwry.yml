@@ -25,6 +25,7 @@ jobs:
 
       - name: Download file 
         run: |
+          rm -rf *.dat *.czdb czdb.zip
           echo "download dat file..."
           wget -q --user-agent="${{ ENV.USER_AGENT }}" -O qqwry.dat "${{ secrets.DAT_FILE_URL }}" 
           if [ $? -eq 0 ]; then
@@ -144,4 +145,3 @@ jobs:
           git add qqwry.dat cz88_public_v4.czdb cz88_public_v6.czdb
           git commit -m "Update db file in  ${{ env.dat_date }}"
           git push origin main
-
