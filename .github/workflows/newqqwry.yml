@@ -150,6 +150,7 @@ jobs:
           echo "Configuring Git..."
           git config --global user.name $GIT_USERNAME
           git config --global user.email $GIT_EMAIL
-          git add qqwry.dat cz88_public_v4.czdb cz88_public_v6.czdb
+          echo ${{ env.dat_date }} > version                
+          git add qqwry.dat cz88_public_v4.czdb cz88_public_v6.czdb version
           git commit -m "Update db file in  ${{ env.dat_date }}"
           git push origin main
