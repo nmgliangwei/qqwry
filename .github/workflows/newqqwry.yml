@@ -28,7 +28,7 @@ jobs:
           mkdir ./tmpdownload
           rm -rf ./tmpdownload/*
           echo "download dat file..."
-          wget -q --user-agent="${{ ENV.USER_AGENT }}" -p ./tmpdownload "${{ secrets.DAT_FILE_URL }}" 
+          wget --content-disposition -q --user-agent="${{ ENV.USER_AGENT }}" -p ./tmpdownload "${{ secrets.DAT_FILE_URL }}" 
           if [ $? -eq 0 ]; then
             echo "Dat file downloaded successfully."
           else
