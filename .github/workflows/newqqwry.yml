@@ -28,14 +28,13 @@ jobs:
           mkdir ./tmpdownload
           rm -rf ./tmpdownload/*
           echo "download dat file..."
-          wget -q --user-agent="${{ ENV.USER_AGENT }}" -O ./tmpdownload/qqwry.dat "${{ secrets.DAT_FILE_URL }}" 
+          wget -q --user-agent="${{ ENV.USER_AGENT }}" -p ./tmpdownload "${{ secrets.DAT_FILE_URL }}" 
           if [ $? -eq 0 ]; then
             echo "Dat file downloaded successfully."
           else
             echo "Dat file download failed."
             exit 1
           fi
-          TAG_DATE=$(date "+%Y-%m-%d")
           echo "download czdb file..."
           wget --content-disposition -q --user-agent="${{ ENV.USER_AGENT }}" -P ./tmpdownload "${{ secrets.CZDB_FILE_URL }}"
           if [ $? -eq 0 ]; then
@@ -44,6 +43,8 @@ jobs:
             echo "Czdb file download failed."
             exit 1
           fi
+          TAG_DATE=$(ls ./tmpdownload/*.dat |grep -o -E '^[0-9]{8}' |sed 's/\([0-9]\{4\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)/\1-\2-\3/')
+          mv ./tmpdownload/*.dat ./tmpdownload/qqwry.dat
           unzip ./tmpdownload/czdb.zip -d ./tmpdownload/
           ls -alh ./tmpdownload/
           echo "dat_date=$TAG_DATE" >> $GITHUB_ENV
