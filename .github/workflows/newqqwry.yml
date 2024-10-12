@@ -1,4 +1,6 @@
 name: Download and Update Czip Db File
+on:
+  workflow_dispatch:
 
 permissions:
   contents: write
