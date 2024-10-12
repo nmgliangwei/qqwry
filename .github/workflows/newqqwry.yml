@@ -1,15 +1,5 @@
 name: Download and Update Czip Db File
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '10 2,5,9,12,15 * * *'
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - 'README.md'
-
 permissions:
   contents: write
 env:
