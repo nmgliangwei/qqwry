@@ -1,6 +1,13 @@
 name: Download and Update Czip Db File
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '10 2,5,9,12,15 * * *'
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
 
 permissions:
   contents: write
@@ -8,141 +15,20 @@ env:
   USER_AGENT: "Mozilla/5.0 (Macintosh; Intel Mac OS X 12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.0.0"
 
 jobs:
-  new-build:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download file 
-        run: |
-          mkdir ./tmpdownload
-          rm -rf ./tmpdownload/*
-          echo "download dat file..."
-          wget --content-disposition -q --user-agent="${{ ENV.USER_AGENT }}" -P ./tmpdownload "${{ secrets.DAT_FILE_URL }}" 
-          if [ $? -eq 0 ]; then
-            echo "Dat file downloaded successfully."
-          else
-            echo "Dat file download failed."
-            exit 1
-          fi
-          echo "download czdb file..."
-          wget --content-disposition -q --user-agent="${{ ENV.USER_AGENT }}" -P ./tmpdownload "${{ secrets.CZDB_FILE_URL }}"
-          if [ $? -eq 0 ]; then
-            echo "Czdb file downloaded successfully."
-          else
-            echo "Czdb file download failed."
-            exit 1
-          fi
-          dat_file_name=$(ls ./tmpdownload/*.dat)
-          TAG_DATE=$( echo "${dat_file_name##*/}" |grep -o -E '^[0-9]{8}' |sed 's/\([0-9]\{4\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)/\1-\2-\3/')
-          mv ./tmpdownload/*.dat ./tmpdownload/qqwry.dat
-          unzip ./tmpdownload/czdb.zip -d ./tmpdownload/
-          ls -alh ./tmpdownload/
-          echo "dat_date=$TAG_DATE" >> $GITHUB_ENV
-      - name: Calculate new file hash
-        id: calculate_new_hash
-        run: |
-          if [ -f ./tmpdownload/qqwry.dat ]; then
-            echo "Calculating hash for qqwry.dat..."
-            DAT_FILE_HASH=$(sha256sum ./tmpdownload/qqwry.dat | awk '{ print $1 }')
-            echo "DAT_FILE_HASH=${DAT_FILE_HASH}" >> $GITHUB_ENV
-            echo "dat file hash: ${DAT_FILE_HASH}"
-          else
-            echo "Error: qqwry.dat not found."
-            exit 1
-          fi
-          if [ -f ./tmpdownload/cz88_public_v4.czdb ]; then
-            echo "Calculating hash for cz88_public_v4.czdb..."
-            CZDB_V4_FILE_HASH=$(sha256sum ./tmpdownload/cz88_public_v4.czdb | awk '{ print $1 }')
-            echo "CZDB_V4_FILE_HASH=${CZDB_V4_FILE_HASH}" >> $GITHUB_ENV
-            echo "czdb v4 file hash: ${CZDB_V4_FILE_HASH}"
-          else
-            echo "Error: cz88_public_v4.czdb not found."
-            exit 1
-          fi
-          if [ -f ./tmpdownload/cz88_public_v6.czdb ]; then
-            echo "Calculating hash for cz88_public_v6.czdb..."
-            CZDB_V6_FILE_HASH=$(sha256sum ./tmpdownload/cz88_public_v6.czdb | awk '{ print $1 }')
-            echo "CZDB_V6_FILE_HASH=${CZDB_V6_FILE_HASH}" >> $GITHUB_ENV
-            echo "czdb v6 file hash: ${CZDB_V6_FILE_HASH}"
-          else
-            echo "Error: cz88_public_v6.czdb not found."
-            exit 1
-          fi
-
-      - name: Calculate repository file hash
-        id: calculate_repo_hash
-        run: |
-          echo "Calculating hash for the repository file..."
-          REPO_DAT_HASH=$(git show main:qqwry.dat | sha256sum | awk '{ print $1 }')
-          REPO_CZDB_V4_HASH=$(git show main:cz88_public_v4.czdb | sha256sum | awk '{ print $1 }')
-          REPO_CZDB_V6_HASH=$(git show main:cz88_public_v6.czdb | sha256sum | awk '{ print $1 }')
-          echo "REPO_DAT_HASH=${REPO_DAT_HASH}" >> $GITHUB_ENV
-          echo "REPO_CZDB_V4_HASH=${REPO_CZDB_V4_HASH}" >> $GITHUB_ENV
-          echo "REPO_CZDB_V6_HASH=${REPO_CZDB_V6_HASH}" >> $GITHUB_ENV
-          echo "Repository dat file hash: ${REPO_HASH}"
-          echo "Repository czdb v4 file hash: ${REPO_CZDB_V4_HASH}"
-          echo "Repository czdb v6 file hash: ${REPO_CZDB_V6_HASH}"
-
-      - name: Compare file hashes
-        id: compare_hashes
-        run: |
-          if [ "${{ env.DAT_FILE_HASH }}" != "${{ env.REPO_DAT_HASH }}" ]; then
-            echo "File has changed."
-            \cp ./tmpdownload/qqwry.dat ./
-            \cp ./tmpdownload/cz88_public_v4.czdb ./
-            \cp ./tmpdownload/cz88_public_v6.czdb ./
-            echo "FILE_CHANGED=true" >> $GITHUB_ENV
-          else
-            echo "File has not changed."
-            echo "CZDB_V4_FILE_HASH=${{ env.REPO_CZDB_V4_HASH }}" >> $GITHUB_ENV
-            echo "CZDB_V6_FILE_HASH=${{ env.REPO_CZDB_V6_HASH }}" >> $GITHUB_ENV
-          fi
-
-      - name: Check if tag exists
-        id: check_tag
-        run: |
-          git fetch --tags
-          TAG_EXISTS=false
-          if git rev-parse "${{ env.dat_date }}" >/dev/null 2>&1; then
-            TAG_EXISTS=true
-          fi
-          echo "TAG_EXISTS=${TAG_EXISTS}" >> $GITHUB_ENV
-
-      - name: Create a new release
-        if: env.TAG_EXISTS == 'false'
-        uses: ncipollo/release-action@v1
+      - uses: pnpm/action-setup@v4
         with:
-          commit: ${{ env.GITHUB_SHA }}
-          tag: ${{ env.dat_date }}
-          token: ${{ secrets.qqwry }}
-          artifacts: qqwry.dat,cz88_public_v4.czdb,cz88_public_v6.czdb
-          body: |
-           #### czip db file info
-
-           | Name               | Value                      |
-           | :----------------: | :------------------------: |
-           | Dat File Fast Download:     | https://raw.gitmirror.com/nmgliangwei/qqwry/main/qqwry.dat |
-           | Dat File sha256:         | qqwry.dat: ${{ env.DAT_FILE_HASH }} |
-           | Czdb v4 File Fast Download:     | https://raw.gitmirror.com/nmgliangwei/qqwry/main/cz88_public_v4.czdb |
-           | Czdb v4 File sha256:         | cz88_public_v4.czdb: ${{ env.CZDB_V4_FILE_HASH }} |
-           | Czdb v6 File Fast Download:     | https://raw.gitmirror.com/nmgliangwei/qqwry/main/cz88_public_v6.czdb |
-           | Czdb v6 File sha256:         | cz88_public_v6.czdb: ${{ env.CZDB_V6_FILE_HASH }} |
-
-           <p align="right"><code>Version: ${{ env.dat_date }} </code></p>
-
-      - name: Commit and push changes
-        if: env.FILE_CHANGED == 'true'
+          version: 9
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build
         env:
+          DOWNLOAD_TOKEN: ${{ secrets.DOWNLOAD_TOKEN }}
+          CZDB_TOKEN: ${{ secrets.CZDB_TOKEN }}
           GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
           GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
         run: |
-          echo "Configuring Git..."
-          git config --global user.name $GIT_USERNAME
-          git config --global user.email $GIT_EMAIL
-          echo ${{ env.dat_date }} > version                
-          git add qqwry.dat cz88_public_v4.czdb cz88_public_v6.czdb version
-          git commit -m "Update db file in  ${{ env.dat_date }}"
-          git push origin main
+          pnpm i
+          pnpm run build
