@@ -6,6 +6,8 @@ import QQWryPacker from './packer.js'
 
 const DOWNLOAD_TOKEN = process.env.DOWNLOAD_TOKEN
 const CZDB_TOKEN = process.env.CZDB_TOKEN
+const GIT_USERNAME = process.env.GIT_USERNAME
+const GIT_EMAIL = process.env.GIT_EMAIL
 
 const download = async () => {
   const url = `https://www.cz88.net/api/communityIpAuthorization/communityIpDbFile?fn=czdb&key=${DOWNLOAD_TOKEN}`
@@ -97,9 +99,15 @@ const release = async () => {
       currentInfo
     })
 
-    await execa('gh', ['release', 'create', currentVersion, '-t', currentVersion, '-n', `QQWry version: ${currentVersion}`, './dist/qqwry.dat'])
-    await execa('git', ['config', 'user.name', 'github-actions'])
-    await execa('git', ['config', 'user.email', 'nmgliangwei@gmail.com'])
+    await execa('gh', ['release', 'create', currentVersion, '-t', currentVersion, '-n', `#### czip db file info
+
+           | Name               | Value                      |
+           | :----------------: | :------------------------: |
+           | Dat File Fast Download:     | https://raw.gitmirror.com/nmgliangwei/qqwry/main/qqwry.dat |
+
+           <p align="right"><code>Version: ${currentVersion} </code></p>`, './dist/qqwry.dat'])
+    await execa('git', ['config', 'user.name', GIT_USERNAME])
+    await execa('git', ['config', 'user.email', GIT_EMAIL])
     await execa('git', ['add', './version.json'])
     await execa('git', ['commit', '-m', `chore: update version info to ${currentVersion}`])
     await execa('git', ['push'])
