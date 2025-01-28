@@ -36,6 +36,7 @@ const extract = async () => {
   const buffer = qqwryPacker.build()
   await fs.promises.mkdir('./dist', { recursive: true })
   fs.writeFileSync('./dist/qqwry.dat', buffer)
+  fs.cpSync('./dist/qqwry.dat', './qqwry.dat')
 }
 
 const parseQQwryInfo = async () => {
