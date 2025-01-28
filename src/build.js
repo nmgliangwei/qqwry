@@ -106,7 +106,8 @@ const release = async () => {
 <p align="right"><code>Version: ${currentVersion} </code></p>`, './dist/qqwry.dat'])
     await execa('git', ['config', 'user.name', GIT_USERNAME])
     await execa('git', ['config', 'user.email', GIT_EMAIL])
-    await execa('git', ['add', './version.json ./dist/qqwry.dat'])
+    await execa('git', ['add', './version.json'])
+    await execa('git', ['add', './dist/qqwry.dat'])
     await execa('git', ['commit', '-m', `update db file in ${currentVersion}`])
     await execa('git', ['push'])
   }
