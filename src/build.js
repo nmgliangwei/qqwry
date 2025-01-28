@@ -40,7 +40,7 @@ const extract = async () => {
 }
 
 const parseQQwryInfo = async () => {
-  const qqwry = libqqwry(true, './dist/qqwry.dat')
+  const qqwry = libqqwry(true, './qqwry.dat')
 
   const info = {
     count: 0,
@@ -72,7 +72,7 @@ const readInfo = () => {
 }
 
 const parseQQWryVersion = () => {
-  const qqwry = libqqwry(true, './dist/qqwry.dat')
+  const qqwry = libqqwry(true, './qqwry.dat')
   const info = qqwry.searchIP('255.255.255.255')
   return info.Area.match(/(\d+)/gi).join('-')
 }
@@ -104,11 +104,11 @@ const release = async () => {
 | Name               | Value                      |
 | :----------------: | :------------------------: |
 | Dat File Fast Download:     | https://raw.gitmirror.com/nmgliangwei/qqwry/main/qqwry.dat |
-<p align="right"><code>Version: ${currentVersion} </code></p>`, './dist/qqwry.dat'])
+<p align="right"><code>Version: ${currentVersion} </code></p>`, './qqwry.dat'])
     await execa('git', ['config', 'user.name', GIT_USERNAME])
     await execa('git', ['config', 'user.email', GIT_EMAIL])
     await execa('git', ['add', './version.json'])
-    await execa('git', ['add', './dist/qqwry.dat'])
+    await execa('git', ['add', './qqwry.dat'])
     await execa('git', ['commit', '-m', `update db file in ${currentVersion}`])
     await execa('git', ['push'])
   }
