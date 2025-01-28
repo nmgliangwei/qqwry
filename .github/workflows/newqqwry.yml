@@ -29,6 +29,7 @@ jobs:
           CZDB_TOKEN: ${{ secrets.CZDB_TOKEN }}
           GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
           GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
+          GITHUB_TOKEN: ${{ secrets.QQWRY }}
         run: |
           pnpm i
           pnpm run build
