@@ -55,7 +55,7 @@ jobs:
         with:
           commit: ${{ env.GITHUB_SHA }}
           tag: ${{ env.dat_date }}
-          token: ${{ secrets.QQWRYIPDB }}
+          token: ${{ secrets.QQWRY }}
           artifacts: ./dist/qqwry.dat
           body: |
             #### czip db file info

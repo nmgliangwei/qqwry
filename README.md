@@ -1,7 +1,7 @@
 # 纯真 IP 库  [![build](https://github.com/nmgliangwei/qqwry/actions/workflows/newqqwry.yml/badge.svg)](https://github.com/nmgliangwei/qqwry/actions/workflows/newqqwry.yml)
 **纯真dat库文件恢复更新，使用 CZDB 重新制作，不支持 IPV6，如需要 IPV6 请使用下面 IPDB格式的库文件。**
 
-**兼容ipip.net的IPDB格式并支持 IPV4/IPV6 的库文件，请关注[nmgliangwei](https://github.com/nmgliangwei)/[qqwry.ipdb](https://github.com/nmgliangwei/qqwry.ipdb)。**
+**兼容ipip.net的IPDB格式并支持 IPV4/IPV6 的库文件，请关注[nmgliangwei/qqwry.ipdb](https://github.com/nmgliangwei/qqwry.ipdb)。**
 
 **本仓库如果有帮助到您的话可以点点 [Star⭐](https://github.com/nmgliangwei/qqwry)支持下。**
 
