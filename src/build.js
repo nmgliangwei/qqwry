@@ -93,6 +93,7 @@ const release = async () => {
       info.latest = currentVersion
     }
     fs.writeFileSync('./version.json', JSON.stringify(info, null, 2))
+    fs.writeFileSync('./version', info.latest)
 
     console.log({
       info,
@@ -108,6 +109,7 @@ const release = async () => {
     await execa('git', ['config', 'user.name', GIT_USERNAME])
     await execa('git', ['config', 'user.email', GIT_EMAIL])
     await execa('git', ['add', './version.json'])
+    await execa('git', ['add', './version'])
     await execa('git', ['add', './qqwry.dat'])
     await execa('git', ['commit', '-m', `update db file in ${currentVersion}`])
     await execa('git', ['push'])
