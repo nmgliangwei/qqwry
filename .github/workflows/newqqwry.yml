@@ -97,7 +97,7 @@ jobs:
           git config --global user.email $GIT_EMAIL
           if ! git status -s | grep qqwry.dat --quiet ; then
             mv ./dist/qqwry.dat qqwry.dat
-            git add qqwry.dat version
+            git add qqwry.dat version version.json
             git commit -m "Update dat File in  ${{ env.dat_date }}"
             git push
           fi
