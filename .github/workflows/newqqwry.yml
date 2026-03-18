@@ -62,7 +62,7 @@ jobs:
             
             | Name               | Value                      |
             | :----------------: | :------------------------: |
-            | Dat File Fast Download: | https://cdn.jsdmirror.com/gh/nmgliangwei/qqwry@main/qqwry.dat |
+            | Dat File Fast Download: | https://cdn.bili33.top/gh/nmgliangwei/qqwry@main/qqwry.dat |
             | Dat File sha256: | qqwry.dat: ${{ env.FILE_HASH }} |
             <p align="right"><code>Version: ${{ env.dat_date }} </code></p>
 #      - name: Calculate repository hash value
