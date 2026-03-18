@@ -9,7 +9,7 @@
 
 |数据文件|说明|是否推荐|国内加速下载链|历史数据|
 |:---:|---|---|---|---|
-|`qqwry.dat`|dat 数据文件|推荐|[qqwry.dat](https://raw.gitmirror.com/nmgliangwei/qqwry/main/qqwry.dat)|[releases](https://github.com/nmgliangwei/qqwry/releases)|
+|`qqwry.dat`|dat 数据文件|推荐|[qqwry.dat](https://cdn.jsdmirror.com/gh/nmgliangwei/qqwry@main/qqwry.dat)|[releases](https://github.com/nmgliangwei/qqwry/releases)|
 
 
 # 纯真社区版IP库
