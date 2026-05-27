@@ -48,6 +48,7 @@ jobs:
         if: env.TAG_EXISTS != 'true'
         run: |
           echo "FILE_HASH=$(sha256sum ./dist/qqwry.dat | awk '{ print $1 }')" >> $GITHUB_ENV
+          echo "FILE_HASH_HANT=$(sha256sum ./dist/qqwry_zh-hant.dat | awk '{ print $1 }')" >> $GITHUB_ENV
       - name: Create Release
         id: create_release
         uses: ncipollo/release-action@v1
@@ -56,14 +57,16 @@ jobs:
           commit: ${{ env.GITHUB_SHA }}
           tag: ${{ env.dat_date }}
           token: ${{ secrets.QQWRY }}
-          artifacts: ./dist/qqwry.dat
+          artifacts: ./dist/qqwry.dat,./dist/qqwry_zh-hant.dat
           body: |
             #### czip db file info
             
             | Name               | Value                      |
             | :----------------: | :------------------------: |
-            | Dat File Fast Download: | https://cdn.1008.site/gh/nmgliangwei/qqwry@main/qqwry.dat |
+            | Dat File (Simplified Chinese) Fast Download: | https://cdn.1008.site/gh/nmgliangwei/qqwry@main/qqwry.dat |
             | Dat File sha256: | qqwry.dat: ${{ env.FILE_HASH }} |
+            | Dat File (Traditional Chinese) Fast Download: | https://cdn.1008.site/gh/nmgliangwei/qqwry@main/qqwry_zh-hant.dat |
+            | Dat File sha256: | qqwry_zh-hant.dat: ${{ env.FILE_HASH_HANT }} |
             <p align="right"><code>Version: ${{ env.dat_date }} </code></p>
 #      - name: Calculate repository hash value
 #        id: calculate_repo_hash_value
@@ -97,7 +100,8 @@ jobs:
           git config --global user.email $GIT_EMAIL
           if ! git status -s | grep qqwry.dat --quiet ; then
             mv ./dist/qqwry.dat qqwry.dat
-            git add qqwry.dat version version.json
+            mv ./dist/qqwry_zh-hant.dat qqwry_zh-hant.dat
+            git add qqwry.dat qqwry_zh-hant.dat version version.json
             git commit -m "Update dat File in  ${{ env.dat_date }}"
             git push
           fi

@@ -2,12 +2,15 @@ import fs from 'fs'
 import { execa } from 'execa'
 import libqqwry from 'lib-qqwry'
 import Decoder from '@ipdb/czdb'
+import OpenCC from 'opencc-js'
 import QQWryPacker from './packer.js'
 
 const DOWNLOAD_TOKEN = process.env.DOWNLOAD_TOKEN
 const CZDB_TOKEN = process.env.CZDB_TOKEN
 const GIT_USERNAME = process.env.GIT_USERNAME
 const GIT_EMAIL = process.env.GIT_EMAIL
+
+const s2t = OpenCC.Converter({ from: 'cn', to: 'tw' })
 
 const download = async () => {
   const url = `https://www.cz88.net/api/communityIpAuthorization/communityIpDbFile?fn=czdb&key=${DOWNLOAD_TOKEN}`
@@ -18,7 +21,7 @@ const download = async () => {
 }
 
 const extract = async () => {
-  const qqwryPacker = new QQWryPacker()
+  const records = []
   const decoder = new Decoder('./temp/cz88_public_v4.czdb', CZDB_TOKEN)
   decoder.dump(info => {
     const { startIp, endIp, regionInfo } = info
@@ -28,15 +31,24 @@ const extract = async () => {
     }
     // 分离 geo, isp
     const [geo, isp] = regionInfo.split('\t', 2)
-    // 生成记录
-    qqwryPacker.insert(startIp, endIp, geo, isp)
+    records.push({ startIp, endIp, geo, isp })
   })
 
-  // 生成二进制文件
-  const buffer = qqwryPacker.build()
   await fs.promises.mkdir('./dist', { recursive: true })
-  fs.writeFileSync('./dist/qqwry.dat', buffer)
-  // fs.cpSync('./dist/qqwry.dat', './qqwry.dat')
+
+  // 生成简体版
+  const packerCN = new QQWryPacker()
+  for (const { startIp, endIp, geo, isp } of records) {
+    packerCN.insert(startIp, endIp, geo, isp)
+  }
+  fs.writeFileSync('./dist/qqwry.dat', packerCN.build())
+
+  // 生成繁体版
+  const packerTW = new QQWryPacker(text => s2t(text))
+  for (const { startIp, endIp, geo, isp } of records) {
+    packerTW.insert(startIp, endIp, geo, isp)
+  }
+  fs.writeFileSync('./dist/qqwry_zh-hant.dat', packerTW.build())
 }
 
 const parseQQwryInfo = async () => {

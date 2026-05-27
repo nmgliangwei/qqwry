@@ -1,12 +1,17 @@
 import iconv from 'iconv-lite'
 
 class QQWryPacker {
-  constructor() {
+  constructor(textConverter = null) {
     this.indexList = []      // IP索引区
     this.recordList = []     // 记录区
     this.ipTree = new Map()  // IP树
     this.stringCache = new Map() // 字符串缓存
     this.maxRecordOffset = 8
+    this.textConverter = textConverter
+  }
+
+  _convertText(text) {
+    return this.textConverter ? this.textConverter(text) : text
   }
 
   // 插入一条IP记录
@@ -65,6 +70,9 @@ class QQWryPacker {
   }
 
   _createRecord(endIPInt, country, area) {
+    country = this._convertText(country)
+    area = this._convertText(area)
+
     // 写入 endIP
     const recordBuf = Buffer.alloc(4)
     recordBuf.writeUInt32LE(endIPInt, 0)
