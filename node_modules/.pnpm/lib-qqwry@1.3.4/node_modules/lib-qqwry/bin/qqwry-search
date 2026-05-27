@@ -1,0 +1,66 @@
+#!/usr/bin/env node
+
+const program = require('commander');
+const fs = require('fs');
+const path = require('path');
+const qqwry = require('..');
+
+program
+	.name('search')
+	.usage('<ip> [ip...]')
+	.description('搜索IP/IP段')
+	.option('-r, --range', 'IP段模式查询')
+	.option('-f, --format <value>', '让IP段模式输出的特定格式 支持 "json" or "csv"', /^(json|csv)$/)
+	.option('-o, --output <path>', '输出至文件')
+	.option('-H, --no-header', 'csv 与 json 格式不输出字段名')
+	.option('-S, --no-speed', 'IP段查询模式时默认会启动speed模式, 添加此选项可关闭该设定')
+	.on('--help', function() {
+		console.log('');
+		console.log('Examples:');
+		console.log('  $ qqwry 1.0.0.0');
+		console.log('  $ qqwry 0.0.0.0 1.0.0.0 -rf csv');
+	})
+	.parse(process.argv);
+
+if (program.args.length < 1) {
+	program.help();
+} else {
+	try {
+		let lib = qqwry();
+		let { range, format, speed, header, output } = program.opts();
+		let ips = program.args.slice(0);
+		let stdout = process.stdout;
+		let outputFile = false;
+		if (output) {
+			outputFile = true;
+			// let obj = path.parse(output);
+			let ext = path.parse(output).ext;
+			format = format ? format : ext == '.json' ? 'json' : ext == '.csv' ? 'csv' : format;
+			stdout = fs.createWriteStream(output);
+			stdout.on('error', function(err) {
+				console.error(err.message || err);
+			});
+			stdout.on('close', function() {
+				console.log('done');
+			});
+		}
+		if (range) {
+			let { min, max } = Math;
+			let ns = ips.map(qqwry.ipToInt);
+			speed && lib.speed();
+			lib.searchIPScopeStream(min(...ns), max(...ns), { format: format, outHeader: header }).pipe(
+				stdout
+			);
+		} else if (ips.length > 1) {
+			ips.forEach(ip => {
+				let v = lib(ip);
+				console.log(`${v.ip} ${v.Country} ${v.Area}`);
+			});
+		} else {
+			let v = lib(ips[0]);
+			console.log(`${v.Country} ${v.Area}`);
+		}
+	} catch (err) {
+		console.error(err.message || err);
+	}
+}

@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+
+const program = require('commander');
+const chalk = require('chalk');
+const qqwry = require('../');
+
+program
+	.usage('<command> [options]')
+	.option('-v, --version', '当前版本信息')
+	.command('search', '默认指令 搜索IP/IP段', { isDefault: true })
+	.command('find', '查找区域信息')
+	// .command('update', '更新IP库(qqwry.dat)');
+// .command('remote', '获取最新IP库信息').alias('last');
+
+//版本
+program.on('option:version', function() {
+	try {
+		let v_lib = require('../package').version;
+		let v_data = qqwry().searchIP('255.255.255.255').Area;
+		console.log(`v${v_lib}`, `(Local data: ${chalk.bold(v_data)})`);
+	} catch (err) {
+		console.error(err.message || err);
+	}
+	process.exit(0);
+});
+
+if (process.argv.length < 3) {
+	// program.help();
+}
+
+program.parse(process.argv);

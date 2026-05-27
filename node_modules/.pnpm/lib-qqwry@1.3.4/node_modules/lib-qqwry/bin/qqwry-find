@@ -1,0 +1,88 @@
+#!/usr/bin/env node
+
+const program = require('commander');
+const toRegex = require('to-regex');
+const qqwry = require('..');
+const getFomatFn = require('../lib/format');
+
+program
+	.name('find')
+	.usage('<keyword> [keywords...]')
+	.description('通过关键字反查IP段')
+	.option('-c, --count', '只是统计记录数')
+	.option('--have <value>', '过滤关键字')
+	// .option('-f, --format <value>', '让IP段模式输出的特定格式 支持 "json" or "csv"', /^(json|csv)$/)
+	.option('-i, --ignore-case', '不区分大小写模式')
+	.option('-E, --extended-regexp', '启用正则表达式查询')
+	.parse(process.argv);
+
+if (program.args.length < 1) {
+	program.help();
+} else if (program.args.length) {
+	try {
+		let lib = qqwry();
+		let { ignoreCase, count, filter, extendedRegexp } = program.opts();
+		let keyword = program.args;
+		let stdout = process.stdout;
+		lib.speed();
+		let sum = 0;
+		let formatFn = getFomatFn('text');
+		let isMatch = (function() {
+			let reg;
+			if (extendedRegexp) {
+				reg = toRegex(keyword, { contains: true, nocase: ignoreCase });
+			} else {
+				// reg = mm.makeRe(keyword[0],{matchBase: false,nocase: ignoreCase})
+				// reg = new RegExp(keyword[0], ignoreCase ? 'i' : '');
+				let _isMatch;
+				if (ignoreCase) {
+					keyword = keyword.map(v => v.toLocaleLowerCase());
+					_isMatch = function(str, key) {
+						return ~str.toLocaleLowerCase().indexOf(key);
+					};
+				} else {
+					_isMatch = function(str, key) {
+						return str.indexOf(key) != -1;
+					};
+				}
+				return str => {
+					for (let key of keyword) {
+						if (_isMatch(str, key)) return true;
+					}
+				};
+			}
+			return str => {
+				return reg.test(str);
+			};
+		})();
+		let Filter = (function() {
+			if (filter) {
+				if (ignoreCase) {
+					filter = filter.toLocaleLowerCase();
+					return function(str) {
+						return ~str.toLocaleLowerCase().indexOf(filter);
+					};
+				} else {
+					return function(str) {
+						return str.indexOf(filter) != -1;
+					};
+				}
+			}
+		})();
+		lib.searchIPScopeStream(0, 0xffffffff, { format: 'object' })
+			.on('data', function(obj) {
+				if (isMatch(obj[4]) || (isMatch(obj[5]) && (!Filter || (Filter(obj[4]) || Filter(obj[5]))))) {
+					sum++;
+					if (!count) {
+						stdout.write(formatFn(obj));
+					}
+					return;
+				}
+			})
+			.on('end', function() {
+				count && console.log(sum);
+			});
+	} catch (err) {
+		console.error(err.message || err);
+	}
+}
