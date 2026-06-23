@@ -12,6 +12,48 @@ const GIT_EMAIL = process.env.GIT_EMAIL
 
 const s2t = OpenCC.Converter({ from: 'cn', to: 'tw' })
 
+// 把远端版本号(v20260520) 转成本地版本号格式(2026-05-20)
+const normalizeRemoteVersion = (raw) => {
+  const m = /^v?(\d{4})(\d{2})(\d{2})$/.exec(raw || '')
+  if (!m) return null
+  return `${m[1]}-${m[2]}-${m[3]}`
+}
+
+const readLocalVersion = () => {
+  try {
+    return fs.readFileSync('./version', 'utf-8').trim()
+  } catch {
+    return null
+  }
+}
+
+// 先查询官方最新版本号，若与本地版本一致，则跳过下载
+// 接口异常时返回 null，按原流程继续下载，避免阻塞每日更新
+const checkRemoteVersion = async () => {
+  try {
+    const url = `https://cz88.net/api/communityIpVersions/getLatestVersion?key=${DOWNLOAD_TOKEN}`
+    const res = await fetch(url)
+    if (!res.ok) {
+      console.warn(`Version API HTTP ${res.status}, fallback to download`)
+      return null
+    }
+    const body = await res.json()
+    if (body.code !== 200 || !body.data) {
+      console.warn(`Version API unexpected payload: ${JSON.stringify(body)}, fallback to download`)
+      return null
+    }
+    const remote = normalizeRemoteVersion(body.data)
+    if (!remote) {
+      console.warn(`Version API unrecognized format: ${body.data}, fallback to download`)
+      return null
+    }
+    return remote
+  } catch (err) {
+    console.warn(`Version API error: ${err.message}, fallback to download`)
+    return null
+  }
+}
+
 const download = async () => {
   const url = `https://www.cz88.net/api/communityIpAuthorization/communityIpDbFile?fn=czdb&key=${DOWNLOAD_TOKEN}`
   await fs.promises.mkdir('./temp', { recursive: true })
@@ -130,15 +172,26 @@ const release = async () => {
 }
 
 const main = async () => {
-  // 0. 下载 czdb 并解压
+  // 0. 先比对版本号，若与本地一致则直接退出，避免每日重复下载
+  const remoteVersion = await checkRemoteVersion()
+  const localVersion = readLocalVersion()
+  if (remoteVersion && localVersion && remoteVersion === localVersion) {
+    console.log(`Remote version ${remoteVersion} equals local, skip build`)
+    return
+  }
+  if (remoteVersion) {
+    console.log(`Remote version: ${remoteVersion}, local version: ${localVersion}, continue`)
+  }
+
+  // 1. 下载 czdb 并解压
   await download()
   console.log('Downloaded')
 
-  // 1. 反解压 czdb 并生成 qqwry.dat
+  // 2. 反解压 czdb 并生成 qqwry.dat
   await extract()
   console.log('Extracted')
 
-  // 2. 生成版本信息
+  // 3. 生成版本信息
   await release()
   console.log('Released')
 }

@@ -43,6 +43,11 @@ jobs:
             echo "Tag already exists, skipping create release"
             echo "TAG_EXISTS=true" >> $GITHUB_ENV
           fi
+          # 如果 build 因版本未变化而跳过，dist 目录不会被生成，后续步骤一并跳过
+          if [ ! -f ./dist/qqwry.dat ]; then
+            echo "No new build artifact, skipping subsequent steps"
+            echo "TAG_EXISTS=true" >> $GITHUB_ENV
+          fi
       - name: Calculate file hash value
         id: calculate_hash_value
         if: env.TAG_EXISTS != 'true'
