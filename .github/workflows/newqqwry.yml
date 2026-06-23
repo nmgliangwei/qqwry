@@ -23,7 +23,27 @@ jobs:
           version: 9
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Check remote version
+        id: precheck
+        env:
+          DOWNLOAD_TOKEN: ${{ secrets.DOWNLOAD_TOKEN }}
+        run: |
+          # 先调用官方接口拿最新版本号，与本地 ./version 比对，命中则直接跳过后续所有步骤
+          remote_raw=$(curl -fsS --max-time 15 "https://cz88.net/api/communityIpVersions/getLatestVersion?key=${DOWNLOAD_TOKEN}" | jq -r '.data // empty' || true)
+          local_version=$(tr -d '[:space:]' < version 2>/dev/null || true)
+          if [ -n "$remote_raw" ]; then
+            # v20260520 -> 2026-05-20
+            remote_version=$(echo "$remote_raw" | sed -E 's/^v?([0-9]{4})([0-9]{2})([0-9]{2})$/\1-\2-\3/')
+            echo "remote=$remote_version local=$local_version"
+            if [ "$remote_version" = "$local_version" ]; then
+              echo "Remote version equals local, skip whole job"
+              echo "SKIP=true" >> $GITHUB_ENV
+            fi
+          else
+            echo "Remote version API unavailable, fallback to full build"
+          fi
       - name: Parse
+        if: env.SKIP != 'true'
         env:
           DOWNLOAD_TOKEN: ${{ secrets.DOWNLOAD_TOKEN }}
           CZDB_TOKEN: ${{ secrets.CZDB_TOKEN }}
@@ -34,30 +54,31 @@ jobs:
           pnpm i
           pnpm run build
       - name: Check if tag exists
+        if: env.SKIP != 'true'
         run: |
           dat_date=$(cat version)
           echo "dat_date=${dat_date}" >> $GITHUB_ENV
-          git fetch --tags
           echo "Value of dat_date: ${dat_date}"
-          if git rev-parse ${dat_date} >/dev/null 2>&1; then
+          # 只查询远端这一个 tag，开销与历史 tag 数量无关，比 git fetch --tags 快很多
+          if git ls-remote --exit-code --tags origin "refs/tags/${dat_date}" >/dev/null 2>&1; then
             echo "Tag already exists, skipping create release"
             echo "TAG_EXISTS=true" >> $GITHUB_ENV
           fi
-          # 如果 build 因版本未变化而跳过，dist 目录不会被生成，后续步骤一并跳过
+          # 兼容 build.js 内部因版本未变而跳过的情况
           if [ ! -f ./dist/qqwry.dat ]; then
             echo "No new build artifact, skipping subsequent steps"
             echo "TAG_EXISTS=true" >> $GITHUB_ENV
           fi
       - name: Calculate file hash value
         id: calculate_hash_value
-        if: env.TAG_EXISTS != 'true'
+        if: env.SKIP != 'true' && env.TAG_EXISTS != 'true'
         run: |
           echo "FILE_HASH=$(sha256sum ./dist/qqwry.dat | awk '{ print $1 }')" >> $GITHUB_ENV
           echo "FILE_HASH_HANT=$(sha256sum ./dist/qqwry_zh-hant.dat | awk '{ print $1 }')" >> $GITHUB_ENV
       - name: Create Release
         id: create_release
         uses: ncipollo/release-action@v1
-        if: env.TAG_EXISTS != 'true'
+        if: env.SKIP != 'true' && env.TAG_EXISTS != 'true'
         with:
           commit: ${{ env.GITHUB_SHA }}
           tag: ${{ env.dat_date }}
@@ -65,7 +86,7 @@ jobs:
           artifacts: ./dist/qqwry.dat,./dist/qqwry_zh-hant.dat
           body: |
             #### czip db file info
-            
+
             | Name               | Value                      |
             | :----------------: | :------------------------: |
             | Dat File (Simplified Chinese) Fast Download: | https://cdn.1008.site/gh/nmgliangwei/qqwry@main/qqwry.dat |
@@ -73,30 +94,8 @@ jobs:
             | Dat File (Traditional Chinese) Fast Download: | https://cdn.1008.site/gh/nmgliangwei/qqwry@main/qqwry_zh-hant.dat |
             | Dat File sha256: | qqwry_zh-hant.dat: ${{ env.FILE_HASH_HANT }} |
             <p align="right"><code>Version: ${{ env.dat_date }} </code></p>
-#      - name: Calculate repository hash value
-#        id: calculate_repo_hash_value
-#        if: env.TAG_EXISTS != 'true'
-#        run: |
-#          echo "REPO_HASH=$(git show main:qqwry.dat | sha256sum | awk '{ print $1 }')" >> $GITHUB_ENV
-#      - name: Check for changes in qqwry.dat
-#        id: check
-#        if: env.TAG_EXISTS != 'true'
-#        run: |
-#          if [ ! -f qqwry.dat ] ; then
-#            echo "File does not exist"
-#            echo "RUN_NEXT_STEP=true" >> $GITHUB_ENV
-#          else
-#            #比较上面的两个hash值是否相等
-#            if [ "${{ env.FILE_HASH }}" != "${{ env.REPO_HASH }}" ]; then
-#              echo "File has changed"
-#              echo "RUN_NEXT_STEP=true" >> $GITHUB_ENV
-#            else
-#              echo "File has not changed"
-#            fi
-#          fi
       - name: Commit qqwry.dat
-#        if: env.RUN_NEXT_STEP == 'true' && env.TAG_EXISTS != 'true'
-        if: env.TAG_EXISTS != 'true'
+        if: env.SKIP != 'true' && env.TAG_EXISTS != 'true'
         env:
           GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
           GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
