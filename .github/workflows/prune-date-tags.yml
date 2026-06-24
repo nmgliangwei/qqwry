@@ -1,0 +1,79 @@
+name: Prune Date-Formatted Tags
+
+on:
+  schedule:
+    # 每天 UTC 时间 02:00 运行（北京时间上午10点）
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      keep_days:
+        description: '保留最近多少天的 tag'
+        required: false
+        default: '30'
+      dry_run:
+        description: '仅预览，不实际删除（true/false）'
+        required: false
+        default: 'false'
+
+env:
+  KEEP_DAYS: ${{ github.event.inputs.keep_days || '30' }}
+  DRY_RUN: ${{ github.event.inputs.dry_run || 'true' }}
+
+jobs:
+  prune-tags:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 必须拉取所有 tag
+
+      - name: Calculate cutoff date
+        id: dates
+        run: |
+          CUTOFF=$(date -d "$KEEP_DAYS days ago" +%Y-%m-%d)
+          echo "cutoff=$CUTOFF" >> "$GITHUB_OUTPUT"
+          echo "Today: $(date +%Y-%m-%d), Keep days: $KEEP_DAYS, Cutoff: $CUTOFF"
+
+      - name: List old tags to delete
+        id: list
+        run: |
+          TAGS_TO_DELETE=()
+          while IFS= read -r tag; do
+            # 只处理严格匹配 YYYY-MM-DD 格式的 tag
+            if [[ "$tag" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+              if [[ "$tag" < "${{ steps.dates.outputs.cutoff }}" ]]; then
+                TAGS_TO_DELETE+=("$tag")
+                echo "Will delete: $tag"
+              fi
+            fi
+          done < <(git tag)
+
+          if [ ${#TAGS_TO_DELETE[@]} -eq 0 ]; then
+            echo "No tags to delete."
+            echo "count=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "count=${#TAGS_TO_DELETE[@]}" >> "$GITHUB_OUTPUT"
+            # 将数组转为逗号分隔字符串，方便后续使用
+            printf '%s\n' "${TAGS_TO_DELETE[@]}" > tags_to_delete.txt
+          fi
+
+      - name: Delete local and remote tags (or dry-run)
+        if: steps.list.outputs.count != '0'
+        run: |
+          if [ "$DRY_RUN" == "true" ]; then
+            echo "=== DRY RUN MODE ==="
+            cat tags_to_delete.txt
+            echo "=== No actual deletion performed ==="
+          else
+            echo "=== Deleting tags... ==="
+            while IFS= read -r tag; do
+              echo "Deleting local tag: $tag"
+              git tag -d "$tag"
+              echo "Deleting remote tag: $tag"
+              git push origin ":refs/tags/$tag"
+            done < tags_to_delete.txt
+          fi
