@@ -80,10 +80,13 @@ jobs:
         uses: ncipollo/release-action@v1
         if: env.SKIP != 'true' && env.TAG_EXISTS != 'true'
         with:
-          commit: ${{ env.GITHUB_SHA }}
+          commit: ${{ github.sha }}
           tag: ${{ env.dat_date }}
           token: ${{ secrets.QQWRY }}
           artifacts: ./dist/qqwry.dat,./dist/qqwry_zh-hant.dat
+          draft: false
+          prerelease: false
+          makeLatest: true
           body: |
             #### czip db file info
 
