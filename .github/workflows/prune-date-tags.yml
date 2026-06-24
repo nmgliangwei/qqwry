@@ -36,7 +36,7 @@ jobs:
 
       - name: Delete old releases and tags
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DRY_RUN: ${{ github.event.inputs.dry_run || 'true' }}
         run: |
           set -e
@@ -47,31 +47,34 @@ jobs:
             if [[ "$tag" < "$CUTOFF" ]]; then
               echo "Processing tag: $tag"
 
-              # 1. 查找与该 tag 关联的 Release（如果有）
-              RELEASE_ID=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
-                "https://api.github.com/repos/${{ github.repository }}/releases/tags/$tag" | jq -r '.id')
-
-              if [[ "$RELEASE_ID" != "null" && -n "$RELEASE_ID" ]]; then
-                echo "  Found Release ID: $RELEASE_ID"
-                if [ "$DRY_RUN" != "true" ]; then
-                  echo "  Deleting Release..."
-                  curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" \
-                    "https://api.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID"
-                else
-                  echo "  [DRY-RUN] Would delete Release ID: $RELEASE_ID"
-                fi
+              # 1. 检查是否存在关联的 Release
+              if gh release view "$tag" >/dev/null 2>&1; then
+                HAS_RELEASE=1
+                echo "  Found associated Release."
               else
+                HAS_RELEASE=0
                 echo "  No associated Release found."
               fi
 
-              # 2. 删除本地和远程的 tag
-              if [ "$DRY_RUN" != "true" ]; then
+              if [ "$DRY_RUN" == "true" ]; then
+                echo "  [DRY-RUN] Would delete tag$([ $HAS_RELEASE -eq 1 ] && echo ' and Release'): $tag"
+                continue
+              fi
+
+              # 2. 优先用 gh release delete --cleanup-tag 一次性删 Release + tag
+              #    避免先删 Release / 后删 tag 中间失败导致 Release 变 draft
+              if [ "$HAS_RELEASE" -eq 1 ]; then
+                echo "  Deleting Release + tag via gh..."
+                if ! gh release delete "$tag" --yes --cleanup-tag; then
+                  echo "  ❌ Failed to delete Release for $tag — skipping tag deletion to avoid orphan draft."
+                  exit 1
+                fi
+              else
+                # 没有 Release，直接删 tag
                 echo "  Deleting local tag: $tag"
                 git tag -d "$tag"
                 echo "  Deleting remote tag: $tag"
                 git push origin ":refs/tags/$tag"
-              else
-                echo "  [DRY-RUN] Would delete tag: $tag"
               fi
             fi
           done
