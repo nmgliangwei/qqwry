@@ -79,6 +79,21 @@ jobs:
             fi
           done
 
+          # 3. 清理所有「日期格式」的草稿 Release（历史遗留的孤儿 draft）
+          #    草稿 Release 没有真正发布，没有关联 tag，直接按名字删即可。
+          echo ""
+          echo "==== Sweeping orphan draft releases (YYYY-MM-DD) ===="
+          gh release list --limit 1000 --json tagName,isDraft \
+            --jq '.[] | select(.isDraft) | select(.tagName | test("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")) | .tagName' \
+            | while read -r draft_tag; do
+                if [ "$DRY_RUN" == "true" ]; then
+                  echo "  [DRY-RUN] Would delete draft Release: $draft_tag"
+                else
+                  echo "  Deleting draft Release: $draft_tag"
+                  gh release delete "$draft_tag" --yes || echo "  ⚠️  Failed to delete draft $draft_tag (continuing)"
+                fi
+              done
+
           if [ "$DRY_RUN" == "true" ]; then
             echo ""
             echo "⚠️ 当前为预览模式（dry_run=true），未执行任何删除操作。"
