@@ -22,7 +22,7 @@ jobs:
         with:
           version: 9
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
       - name: Check remote version
         id: precheck
         env:

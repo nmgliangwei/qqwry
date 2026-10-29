@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout repository with full history
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0   # 必须拉取所有 tag
 
