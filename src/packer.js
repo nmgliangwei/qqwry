@@ -39,7 +39,11 @@ class QQWryPacker {
       const indexRecord = Buffer.alloc(7)
       indexRecord.writeUInt32LE(startIP, 0)
       if (geoOffset > 0xFFFFFF) {
-        throw new Error('Offset overflow')
+        throw new Error(
+          `Offset overflow: record area is ${8 + recordBuffer.length} bytes ` +
+          `(${sortedIPs.length} IP entries), beyond the qqwry format's 3-byte ` +
+          `offset limit of 16777215 bytes. The dataset no longer fits the qqwry.dat format.`
+        )
       }
       indexRecord.writeUInt8((geoOffset >> 0) & 0xFF, 4)
       indexRecord.writeUInt8((geoOffset >> 8) & 0xFF, 5)
@@ -69,9 +73,38 @@ class QQWryPacker {
       parseInt(parts[3])) >>> 0
   }
 
+  // 0x01 + 3字节偏移：整条(country+area)重定向
+  _redirectWhole(offset) {
+    const buf = Buffer.alloc(4)
+    buf.writeUInt8(0x01, 0)
+    buf.writeUInt8((offset >> 0) & 0xFF, 1)
+    buf.writeUInt8((offset >> 8) & 0xFF, 2)
+    buf.writeUInt8((offset >> 16) & 0xFF, 3)
+    return buf
+  }
+
+  // 0x02 + 3字节偏移：单字段重定向，目标处为纯字符串
+  _redirectField(offset) {
+    const buf = Buffer.alloc(4)
+    buf.writeUInt8(0x02, 0)
+    buf.writeUInt8((offset >> 0) & 0xFF, 1)
+    buf.writeUInt8((offset >> 8) & 0xFF, 2)
+    buf.writeUInt8((offset >> 16) & 0xFF, 3)
+    return buf
+  }
+
+  // GBK字符串 + 0x00结尾
+  _stringField(s) {
+    return Buffer.concat([
+      iconv.encode(s || '', 'gbk'),
+      Buffer.from([0x00])
+    ])
+  }
+
   _createRecord(endIPInt, country, area) {
     country = this._convertText(country)
     area = this._convertText(area)
+    const comboKey = `${country}\t${area}`
 
     // 写入 endIP
     const recordBuf = Buffer.alloc(4)
@@ -79,94 +112,40 @@ class QQWryPacker {
     this.recordList.push(recordBuf)
     this.maxRecordOffset += 4
 
-    // country + area 都有的记录
-    if (this.stringCache.has(`${country}\t${area}`)) {
-      const redirectBuf = Buffer.alloc(4)
-      redirectBuf.writeUInt8(0x01, 0)
-      const offset = this.stringCache.get(`${country}\t${area}`)
-      redirectBuf.writeUInt8((offset >> 0) & 0xFF, 1)
-      redirectBuf.writeUInt8((offset >> 8) & 0xFF, 2)
-      redirectBuf.writeUInt8((offset >> 16) & 0xFF, 3)
-      this.recordList.push(redirectBuf)
+    // 整条组合已缓存：4字节重定向指向首见记录的country字段
+    const comboOffset = this.stringCache.get(comboKey)
+    if (comboOffset !== undefined) {
+      this.recordList.push(this._redirectWhole(comboOffset))
       this.maxRecordOffset += 4
       return
     }
 
-    // country, area 分开都有的记录
-    if (this.stringCache.has(country) && this.stringCache.has(area)) {
-      const redirectBuf = Buffer.alloc(4)
-      redirectBuf.writeUInt8(0x01, 0)
-      const nextOffset = this.maxRecordOffset + 4
-      redirectBuf.writeUInt8((nextOffset >> 0) & 0xFF, 1)
-      redirectBuf.writeUInt8((nextOffset >> 8) & 0xFF, 2)
-      redirectBuf.writeUInt8((nextOffset >> 16) & 0xFF, 3)
-      this.recordList.push(redirectBuf)
-      this.maxRecordOffset += redirectBuf.length
+    // country字段：已见则0x02重定向(4字节)，否则写字符串
+    const countryOffset = this.stringCache.get(country)
+    const countryBuf = countryOffset !== undefined
+      ? this._redirectField(countryOffset)
+      : this._stringField(country)
+    const countryFieldOffset = this.maxRecordOffset
 
-      const countryOffset = this.stringCache.get(country)
-      const countryBuf = Buffer.alloc(4)
-      countryBuf.writeUInt8(0x02, 0)
-      countryBuf.writeUInt8((countryOffset >> 0) & 0xFF, 1)
-      countryBuf.writeUInt8((countryOffset >> 8) & 0xFF, 2)
-      countryBuf.writeUInt8((countryOffset >> 16) & 0xFF, 3)
-
-      const areaOffset = this.stringCache.get(area)
-      const areaBuf = Buffer.alloc(4)
-      areaBuf.writeUInt8(0x02, 0)
-      areaBuf.writeUInt8((areaOffset >> 0) & 0xFF, 1)
-      areaBuf.writeUInt8((areaOffset >> 8) & 0xFF, 2)
-      areaBuf.writeUInt8((areaOffset >> 16) & 0xFF, 3)
-
-      this.recordList.push(countryBuf)
-      this.recordList.push(areaBuf)
-      this.maxRecordOffset += countryBuf.length + areaBuf.length
-      // 缓存
-      this.stringCache.set(`${country}\t${area}`, nextOffset)
-      return
-    }
-
-    // country 有 area 没有的记录
-    if (this.stringCache.has(country)) {
-      const currentOffset = this.maxRecordOffset
-      const countryOffset = this.stringCache.get(country)
-      const countryBuf = Buffer.alloc(4)
-      countryBuf.writeUInt8(0x02, 0)
-      countryBuf.writeUInt8((countryOffset >> 0) & 0xFF, 1)
-      countryBuf.writeUInt8((countryOffset >> 8) & 0xFF, 2)
-      countryBuf.writeUInt8((countryOffset >> 16) & 0xFF, 3)
-
-      const areaBuf = Buffer.concat([
-        iconv.encode(area || '', 'gbk'),
-        Buffer.from([0x00])
-      ])
-
-      this.recordList.push(countryBuf)
-      this.recordList.push(areaBuf)
-      this.maxRecordOffset += countryBuf.length + areaBuf.length
-
-      // 缓存
-      this.stringCache.set(`${country}\t${area}`, currentOffset)
-      return
-    }
-
-    // 其他情况
-    const currentOffset = this.maxRecordOffset
-    const countryBuf = Buffer.concat([
-      iconv.encode(country || '', 'gbk'),
-      Buffer.from([0x00])
-    ])
-    const areaBuf = Buffer.concat([
-      iconv.encode(area || '', 'gbk'),
-      Buffer.from([0x00])
-    ])
+    // area字段：同上（字符串缓存country/area通用，同一字符串只落盘一次）
+    const areaOffset = this.stringCache.get(area)
+    const areaBuf = areaOffset !== undefined
+      ? this._redirectField(areaOffset)
+      : this._stringField(area)
+    const areaFieldOffset = countryFieldOffset + countryBuf.length
 
     this.recordList.push(countryBuf)
     this.recordList.push(areaBuf)
     this.maxRecordOffset += countryBuf.length + areaBuf.length
 
-    // 缓存
-    this.stringCache.set(`${country}`, currentOffset)
-    this.stringCache.set(`${country}\t${area}`, currentOffset)
+    // 登记缓存：字符串位置(供0x02重定向)与组合位置(供0x01重定向)
+    if (countryOffset === undefined) {
+      this.stringCache.set(country, countryFieldOffset)
+    }
+    if (areaOffset === undefined) {
+      this.stringCache.set(area, areaFieldOffset)
+    }
+    this.stringCache.set(comboKey, countryFieldOffset)
   }
 }
 
